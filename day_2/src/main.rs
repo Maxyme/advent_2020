@@ -28,23 +28,23 @@ fn password_valid_part2(rule: &str, password: &str) -> bool {
         .collect_tuple()
         .unwrap();
 
-    // extract the values at the specified index
-    let password_char_first_index = {
-        match password.chars().nth(first_index + 1) {
-            Some(v) => v, // if value exists set
-            None => return false, // return false if index outside of string
+    // extract the values at the specified nth value (base 1 counting)
+    let match_first_index = {
+        match password.chars().nth(first_index) {
+            Some(v) => v == char_to_check, // if value exists set
+            None => false, // return false if index outside of string
         }
     };
 
-    let password_char_second_index = {
-        match password.chars().nth(second_index + 1) {
-            Some(v) => v, // if value exists set
-            None => return false, // return false if index outside of string
+    let match_second_index = {
+        match password.chars().nth(second_index) {
+            Some(v) => v == char_to_check, // if value exists set
+            None => false, // return false if index outside of string
         }
     };
 
-    // add one because the problem uses 1-based indexing
-    return password_char_first_index == char_to_check && password_char_second_index == char_to_check;
+    // can only be a match one one index but not both
+    return (match_first_index || match_second_index) && (match_first_index != match_second_index);
 }
 
 fn main() {
