@@ -6,7 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 
 fn get_number_trees_hit(input_lines: &Vec<&str>, direction: &[i32]) -> i32 {
-    let tree: char = "#".chars().next().unwrap();
+    let tree: char = '#';
     let mut number_of_tree: i32 = 0;
     let mut right_counter = 0;
     for (index, line) in input_lines.iter().enumerate() {
