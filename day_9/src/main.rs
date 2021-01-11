@@ -1,6 +1,7 @@
 // Find the first number in the list (after the preamble of 25 numbers) which is not the sum of two of the 25 numbers before it
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+
 fn can_be_sum_of_2_previous_from_list(number: &i64, list_of_previous: &[i64]) -> bool {
     let can_sum = false;
     for (index, first_number) in list_of_previous.iter().enumerate() {
