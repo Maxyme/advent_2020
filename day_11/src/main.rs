@@ -123,18 +123,17 @@ fn get_sum_occupied(lines: &Vec<String>, check_far: bool, limit: i32) -> i32 {
 }
 
 fn main() {
-    //let file = File::open("./src/input.txt").expect("Unable to open file");
     let file = File::open("./src/input.txt").expect("Unable to open file");
     let reader = BufReader::new(file);
     let lines: Vec<_> = reader
         .lines()
         .map(|l| l.expect("Unable to read line"))
-        .collect::<Vec<_>>(); // split on empty lines
+        .collect::<Vec<_>>();
 
     // Part 1
     // Only check the absolute nearby seat
-    //let sum_occupied_nearby = get_sum_occupied(&lines, false, 4);
-    //println!("{} occupied seats for part 1", sum_occupied_nearby);
+    let sum_occupied_nearby = get_sum_occupied(&lines, false, 4);
+    println!("{} occupied seats for part 1", sum_occupied_nearby);
 
     // Part 2
     // Visible seats are in the full vector of top, down, left right, diagonal
