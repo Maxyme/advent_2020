@@ -7,7 +7,6 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use std::str;
 
 fn get_regex_match_dict(rules: &HashMap<usize, &str>) -> HashMap<String, String> {
     // Return a Dict with the regex for possible matches for each rule
