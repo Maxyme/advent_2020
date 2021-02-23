@@ -3,7 +3,6 @@
 use std::fs;
 use std::collections::HashMap;
 use itertools::Itertools;
-use std::collections::hash_map::RandomState;
 
 fn rules_pass(rule: &(Vec<&str>, Vec<&str>), allergens: &HashMap<String, String>) -> bool {
     // Return true if the current rule works with the proposed allergen values, otherwise return False
@@ -19,108 +18,68 @@ fn rules_pass(rule: &(Vec<&str>, Vec<&str>), allergens: &HashMap<String, String>
     }
     true
 }
-
-// fn get_allergen_ingredients_permutations_recursively(rule: &(Vec<&str>, Vec<&str>), allergens: &HashMap<String, String>) -> Vec<HashMap<String, String>> {
-//
-//
-// }
-
 fn get_allergen_ingredients_permutations(rule: &(Vec<&str>, Vec<&str>), allergens: &HashMap<String, String>) -> Vec<HashMap<String, String>> {
     // Return a list of all possible allergen - ingredients, combinations..?
     // Adds possibilities to the initial dict and returns them
     // This can possibly be improved by doing it recursively
-    let mut dicts: Vec<HashMap<String, String>> = Vec::new();
-
-
-    let (rule_ingredients, rule_allergens) = rule;
-    // let it = rule_allergens.iter().cartesian_product(rule_ingredients);
-    // for item in it {
-    //     println!("{:?}", item);
-    // }
-
-
-    let perms =  rule_allergens.iter().permutations(rule_allergens.len());
-    // for each_permutation in list1_permutations:
-    //     zipped = zip(each_permutation, list2)
-    //     all_combinations.append(list(zipped))
-    let mut all_combinations: Vec<(Vec<&str>, Vec<&str>)> = Vec::new();
-    for perm in perms {
-        //let mut iter = a1.iter().zip(a2.iter());
-        let mut zipped = perm.iter().zip(rule_ingredients.iter());
-        let values: (&&&str, &&str) = zipped.next().expect(""); //.collect();
-        println!("{:?}", values)
-        //all_combinations.push(values);
-    }
-
-    // for item in all_combinations {
-    //     println!("{:?}", item);
-    // }
-
-    //itertools::assert_equal(it, vec![(0, 'α'), (0, 'β'), (1, 'α'), (1, 'β')]);
-    // Check >?? fn combinations_with_replacement(self, k: usize) -> CombinationsWithReplacement<Self>
 
     let used_ingredients: Vec<&String> = allergens.values().collect();
+    //let used_ingredients: HashSet<&String>  = used_ingredients.into_iter().collect();
+    let used_allergens: Vec<&String> = allergens.keys().collect();
+    //let used_allergens: HashSet<&String> = used_allergens.into_iter().collect();
 
-    for rule_allergen in rule_allergens {
-        match allergens.get(&*rule_allergen.to_string()) {
-            Some(x) => {
-                // skip if already present in dict
-                continue
-            },
-            None => {
-                let mut possible_dict = allergens.clone();
-                for ingredient  in rule_ingredients {
-                    if !used_ingredients.contains(&&ingredient.to_string()) {
-                        possible_dict.insert(
-                            rule_allergen.to_string(),
-                            ingredient.to_string(),
-                        );
-                        // dicts.push(possible_dict.to_owned());
-                    }
-                }
-                dicts.push(possible_dict.to_owned());
-            }
+    let (rule_ingredients, rule_allergens) = rule;
+
+    // Todo: do this functionaly instead?
+    let mut unused_ingredients = Vec::new();
+    for ing in rule_ingredients {
+        if !used_ingredients.contains(&&ing.to_string()){
+            unused_ingredients.push(*ing);
         }
     }
-    dicts
-    // for rule_allergen in rule_allergens {
-    //     let mut possible_dict = allergens.clone();
-    //     // insert a key only if it doesn't already exist
-    //     possible_dict.entry(rule_allergen).or_insert(100);
-    //     // match allergens.get(book) {
-    //     //     Some(x) => continue,
-    //     //     None => println!("{} is unreviewed.", book)
-    //     // }
-    // }
-    // for (allergen, ingredient) in iproduct!(0..4, 0..4, 0..4) {
-    //     // ..
-    // }
-    // for
+
+    let mut unused_allergens = Vec::new();
+    for all in rule_allergens {
+        if !used_allergens.contains(&&all.to_string()){
+            unused_allergens.push(*all);
+        }
+    }
+
+    // Build all the possible permutations from the leftover allergens and ingredients
+    let perms =  unused_ingredients.iter().permutations(unused_allergens.len());
+    let mut all_permutation_dicts: Vec<HashMap<String, String>> = Vec::new();
+    for perm in perms {
+        let zipped: Vec<_> = perm.into_iter().zip(unused_allergens.iter()).collect();
+        let mut new_allergens_dict = allergens.clone();
+        for values in zipped {
+            let (ing, all) = values;
+            new_allergens_dict.insert(all.to_string(), ing.to_string());
+        }
+        all_permutation_dicts.push(new_allergens_dict);
+    }
+
+    all_permutation_dicts
 }
 
 fn check(rules: &Vec<(Vec<&str>, Vec<&str>)>) -> HashMap<String, String> {
     // Dynamically build a dictionary of ingredients from each line until one is found to work and return it
     fn check_recursive(rules: &Vec<(Vec<&str>, Vec<&str>)>, allergens: &mut HashMap<String, String>) -> Option<HashMap<String, String>> {
-        // return early when the rules have been exhausted
+        // Return early when the rules have been exhausted, which means it was successful
         if rules.len() == 0 {
             return Some(allergens.clone());
         }
-        // Update the dict with values from the rule
-        // let (ingredients, allergies) = rules;
-        // Get a list of possible dictionaries containing the possible ingredient and allergens permutations
-
-        // Check that this rule passes
-        if !rules_pass(&rules[1], &allergens) {
+        // Check that the first rule passes
+        if !rules_pass(&rules[0], &allergens) {
             return None;
         }
 
-        let permutations: Vec<HashMap<String, String>> = Vec::new();
-        let mut final_result: HashMap<String, String> = HashMap::new();
-        for permutation_dict in permutations {
-            //match matrix.get([x_val as usize, y_val as usize, z_val as usize]) {
-            final_result = match check_recursive(&rules[1..].to_vec(), allergens) {
-                Some(mut x) => {
-                    return check_recursive(&rules[2..].to_vec(), &mut x)
+        // Get a list of possible dictionaries containing the possible ingredient and allergens permutations
+        let permutations_dicts = get_allergen_ingredients_permutations(&rules[0], &allergens);
+        // Todo: simplify this?? Why return final result, return the function instead ?
+        for mut permutation_dict in permutations_dicts {
+            match check_recursive(&rules[1..].to_vec(), &mut permutation_dict) {
+                Some(x) => {
+                    return Some(x);
                 }
                 None => {
                     continue
@@ -137,11 +96,12 @@ fn check(rules: &Vec<(Vec<&str>, Vec<&str>)>) -> HashMap<String, String> {
     }
 }
 fn main() {
-    let input = fs::read_to_string("./src/small.txt").expect("Error reading file");
+    let input = fs::read_to_string("./src/input.txt").expect("Error reading file");
     let lines: Vec<&str> = input.lines().collect();
 
     // Parse into a list of tuples (ingredient, allergens)
     let mut ingredient_allergies: Vec<(Vec<&str>, Vec<&str>)> = Vec::with_capacity(lines.len());
+
     for line in lines {
         let (left, right) : (&str, &str)= line.splitn(2, " (contains ").collect_tuple().unwrap();
         let ingredients: Vec<&str> = left.split(char::is_whitespace).collect();
@@ -150,12 +110,13 @@ fn main() {
         let allergens: Vec<&str> = right.split(", ").collect();
         ingredient_allergies.push((ingredients, allergens));
     }
-    println!("{:?}", ingredient_allergies[0]);
 
-    // Todo:?? Parse into a vector of rules (closures) lambdas
-    // example closure: let line_works = |x as dict| x['mxmxvkd'] == dairy || x['xfxx'] == dairy
-
-
+    // Sort by size, to try with the smallest number of combinations first
+    //ingredient_allergies.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    ingredient_allergies.sort_by(|a, b| a.1.len().cmp(&b.1.len()));
+    println!("ddddd{:?}", ingredient_allergies[0]);
+    println!("ddddd{:?}", ingredient_allergies[1]);
+    println!("ddddd{:?}", ingredient_allergies[2]);
     // Always assume that one ingredient can be one allergen only, and vice-versa.
     // (ie: if mxmxvkd contains dairy, no other ingredient can contain dairy)
 
@@ -164,16 +125,19 @@ fn main() {
 
     // Part 1: Determine which ingredients cannot possibly contain any of the allergens in your list.
     // How many times do any of those ingredients appear?
-    let all_ingredients = matches.keys();
+    let all_ingredients :Vec<&String> = matches.values().collect();
     let mut ingredients_without_allergens_sum = 0;
     for (ingredients, _) in ingredient_allergies {
         // get the count of ingredients that are not part of the dict values
-        let count_in_line = 0;
+        let mut count_in_line = 0;
+        for ingredient in ingredients {
+            if !all_ingredients.contains(&&ingredient.to_string()) {
+                count_in_line += 1;
+            }
+        }
         ingredients_without_allergens_sum += count_in_line;
     }
 
-
-    let sum = 0;
     println!("The number of times the ingredients without allergens appear in the list is {}", ingredients_without_allergens_sum);
 
 }
